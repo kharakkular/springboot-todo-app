@@ -10,9 +10,19 @@ public class TodoDto {
 	@NotEmpty
 	private String task;
 	@NotEmpty
-	private boolean isCompleted;
+	private boolean completed;
 	@NotEmpty
 	private Date creationDate;
+	
+	public TodoDto(long id, @NotEmpty String task, @NotEmpty boolean completed, @NotEmpty Date creationDate) {
+		super();
+		this.id = id;
+		this.task = task;
+		this.completed = completed;
+		this.creationDate = creationDate;
+	}
+	
+	public TodoDto() { }
 	
 	public long getId() {
 		return id;
@@ -27,10 +37,10 @@ public class TodoDto {
 		this.task = task;
 	}
 	public boolean isCompleted() {
-		return isCompleted;
+		return completed;
 	}
-	public void setCompleted(boolean isCompleted) {
-		this.isCompleted = isCompleted;
+	public void setCompleted(boolean completed) {
+		this.completed = completed;
 	}
 	public Date getCreationDate() {
 		return creationDate;

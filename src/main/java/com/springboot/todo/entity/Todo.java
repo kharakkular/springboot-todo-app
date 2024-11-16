@@ -19,7 +19,7 @@ public class Todo {
 	private Long id;
 	
 	@Column(name = "completed", nullable = false)
-	private boolean isCompleted;
+	private boolean completed;
 	
 	@Column(name = "task", nullable = false)
 	private String task;
@@ -27,10 +27,10 @@ public class Todo {
 	@Column(name = "createdOn", nullable = false)
 	private Date creationDate;
 
-	public Todo(Long id, boolean isCompleted, String task, Date creationDate) {
+	public Todo(Long id, boolean completed, String task, Date creationDate) {
 		super();
 		this.id = id;
-		this.isCompleted = isCompleted;
+		this.completed = completed;
 		this.task = task;
 		this.creationDate = creationDate;
 	}
@@ -46,11 +46,11 @@ public class Todo {
 	}
 
 	public boolean isCompleted() {
-		return isCompleted;
+		return completed;
 	}
 
-	public void setCompleted(boolean isCompleted) {
-		this.isCompleted = isCompleted;
+	public void setCompleted(boolean completed) {
+		this.completed = completed;
 	}
 
 	public String getTask() {
