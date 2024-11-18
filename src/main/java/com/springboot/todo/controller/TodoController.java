@@ -11,8 +11,10 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.springboot.todo.payload.PaginatedResponse;
 import com.springboot.todo.payload.TodoDto;
 import com.springboot.todo.service.TodoService;
 
@@ -44,7 +46,7 @@ public class TodoController {
 	}
 	
 	@GetMapping
-	public List<TodoDto> getAllTodos() {
-		return todoService.getAllTodos();
+	public PaginatedResponse<TodoDto> getAllTodos(@RequestParam(defaultValue = "0") int pageNo, @RequestParam(defaultValue = "10") int pageSize) {
+		return todoService.getAllTodos(pageNo, pageSize);
 	}
 }

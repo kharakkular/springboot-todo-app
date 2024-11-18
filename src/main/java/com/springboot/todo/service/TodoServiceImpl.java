@@ -1,14 +1,19 @@
 package com.springboot.todo.service;
 
+//import java.awt.print.Pageable;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
 
 import org.modelmapper.ModelMapper;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import com.springboot.todo.entity.Todo;
 import com.springboot.todo.exception.ResourceNotFoundException;
+import com.springboot.todo.payload.PaginatedResponse;
 import com.springboot.todo.payload.TodoDto;
 import com.springboot.todo.repository.TodoRepository;
 
@@ -65,11 +70,25 @@ public class TodoServiceImpl implements TodoService{
 	}
 
 	@Override
-	public List<TodoDto> getAllTodos() {
+	public PaginatedResponse<TodoDto> getAllTodos(int pageNo, int pageSize) {
 		
-		List<TodoDto> list = todoRepository.findAll().stream().map(todo -> mapToDto(todo)).toList();
+		Pageable pageable = PageRequest.of(pageNo, pageSize);
 		
-		return list;
+		Page<Todo> pagedTodos = todoRepository.findAll(pageable);
+		
+		List<Todo> listOfTodos = pagedTodos.getContent();
+		
+		List<TodoDto> content = listOfTodos.stream().map(todo -> mapToDto(todo)).toList();
+		
+		PaginatedResponse<TodoDto> paginatedResponse = new PaginatedResponse();
+		paginatedResponse.setContent(content);
+		paginatedResponse.setPageNo(pagedTodos.getNumber());
+		paginatedResponse.setPageSize(pagedTodos.getSize());
+		paginatedResponse.setTotalElements(pagedTodos.getTotalElements());
+		paginatedResponse.setTotalPages(pagedTodos.getTotalPages());
+		paginatedResponse.setLast(pagedTodos.isLast());
+		
+		return paginatedResponse;
 	}
 	
 	private Todo mapToEntity(TodoDto dto) {
