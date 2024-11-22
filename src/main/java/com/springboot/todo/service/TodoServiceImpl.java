@@ -17,16 +17,23 @@ import com.springboot.todo.payload.PaginatedResponse;
 import com.springboot.todo.payload.TodoDto;
 import com.springboot.todo.repository.TodoRepository;
 
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.Query;
+import jakarta.transaction.Transactional;
+
 @Service
 public class TodoServiceImpl implements TodoService{
+	
+	private EntityManager entityManager;
 	
 	private TodoRepository todoRepository;
 	
 	private ModelMapper mapper;
 	
-	public TodoServiceImpl(TodoRepository _todoRepository, ModelMapper _mapper) {
+	public TodoServiceImpl(TodoRepository _todoRepository, ModelMapper _mapper, EntityManager _manager) {
 		todoRepository = _todoRepository;
 		mapper = _mapper;
+		entityManager = _manager;
 	}
 
 	@Override
@@ -69,24 +76,49 @@ public class TodoServiceImpl implements TodoService{
 		todoRepository.delete(fetchedTodo);
 	}
 
+//	@Override
+//	public PaginatedResponse<TodoDto> getAllTodos(int pageNo, int pageSize) {
+//		
+//		Pageable pageable = PageRequest.of(pageNo, pageSize);
+//		
+//		Page<Todo> pagedTodos = todoRepository.findAll(pageable);
+//		
+//		List<Todo> listOfTodos = pagedTodos.getContent();
+//		
+//		List<TodoDto> content = listOfTodos.stream().map(todo -> mapToDto(todo)).toList();
+//		
+//		PaginatedResponse<TodoDto> paginatedResponse = new PaginatedResponse();
+//		paginatedResponse.setContent(content);
+//		paginatedResponse.setPageNo(pagedTodos.getNumber());
+//		paginatedResponse.setPageSize(pagedTodos.getSize());
+//		paginatedResponse.setTotalElements(pagedTodos.getTotalElements());
+//		paginatedResponse.setTotalPages(pagedTodos.getTotalPages());
+//		paginatedResponse.setLast(pagedTodos.isLast());
+//		
+//		return paginatedResponse;
+//	}
+	@Transactional
 	@Override
 	public PaginatedResponse<TodoDto> getAllTodos(int pageNo, int pageSize) {
 		
-		Pageable pageable = PageRequest.of(pageNo, pageSize);
+		int limit = (pageNo -1) * pageSize;
+		String sql = "select * from todos order by id LIMIT ?1 OFFSET ?2";
+		Query query = entityManager.createNativeQuery(sql, Todo.class);
+		query.setParameter(1, pageSize);
+		query.setParameter(2, limit);
 		
-		Page<Todo> pagedTodos = todoRepository.findAll(pageable);
-		
-		List<Todo> listOfTodos = pagedTodos.getContent();
-		
-		List<TodoDto> content = listOfTodos.stream().map(todo -> mapToDto(todo)).toList();
+		List listOfTodoDto = query.getResultStream().map(todo -> mapToDto((Todo) todo)).toList();
+					
+		long totalElements = (long) entityManager.createQuery("select count(id) from Todo").getSingleResult();
+		int totalPages = (int) Math.ceil(totalElements / pageSize);
 		
 		PaginatedResponse<TodoDto> paginatedResponse = new PaginatedResponse();
-		paginatedResponse.setContent(content);
-		paginatedResponse.setPageNo(pagedTodos.getNumber());
-		paginatedResponse.setPageSize(pagedTodos.getSize());
-		paginatedResponse.setTotalElements(pagedTodos.getTotalElements());
-		paginatedResponse.setTotalPages(pagedTodos.getTotalPages());
-		paginatedResponse.setLast(pagedTodos.isLast());
+		paginatedResponse.setContent(listOfTodoDto);
+		paginatedResponse.setPageNo(pageNo);
+		paginatedResponse.setPageSize(pageSize);
+		paginatedResponse.setTotalElements(totalElements);
+		paginatedResponse.setTotalPages(totalPages);
+		paginatedResponse.setLast(pageSize >= totalPages);
 		
 		return paginatedResponse;
 	}
