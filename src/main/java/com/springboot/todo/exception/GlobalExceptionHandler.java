@@ -39,4 +39,12 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler{
 		
 		return new ResponseEntity<>(errorDetails, HttpStatusCode.valueOf(status.value()));
 	}
+	
+	@ExceptionHandler(FutureCreationDateException.class)
+	public ResponseEntity<ErrorDetails> handleFutureCreationDateException(FutureCreationDateException ex, WebRequest request){
+		
+		ErrorDetails errorDetails = new ErrorDetails(new Date(), "Creation Date: " + ex.getField() + ", reflects a future date!", request.getDescription(false));
+		
+		return new ResponseEntity<ErrorDetails>(errorDetails, HttpStatus.BAD_REQUEST);
+	}
 }
