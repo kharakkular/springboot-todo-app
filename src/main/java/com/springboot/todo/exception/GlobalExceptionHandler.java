@@ -47,4 +47,12 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler{
 		
 		return new ResponseEntity<ErrorDetails>(errorDetails, HttpStatus.BAD_REQUEST);
 	}
+	
+	@ExceptionHandler(ValidationException.class)
+	public ResponseEntity<ErrorDetails> handleValidationException(ValidationException ex, WebRequest request) {
+		
+		ErrorDetails errorDetails = new ErrorDetails(new Date(), "Validation Error for TodoDto **completion**, {" + ex.getErrors().get(0)+ "}", request.getDescription(false));
+		
+		return new ResponseEntity<ErrorDetails>(errorDetails, HttpStatus.BAD_REQUEST);
+	}
 }
