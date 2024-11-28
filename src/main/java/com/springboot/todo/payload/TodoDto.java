@@ -2,6 +2,9 @@ package com.springboot.todo.payload;
 
 import java.util.Date;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.databind.jsonFormatVisitors.JsonFormatTypes;
+
 import jakarta.validation.constraints.NotEmpty;
 
 public class TodoDto {
@@ -12,6 +15,7 @@ public class TodoDto {
 	@NotEmpty
 	private boolean completed;
 	@NotEmpty
+	@JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd-MM-yyyy")
 	private Date creationDate;
 	
 	public TodoDto(long id, @NotEmpty String task, @NotEmpty boolean completed, @NotEmpty Date creationDate) {
