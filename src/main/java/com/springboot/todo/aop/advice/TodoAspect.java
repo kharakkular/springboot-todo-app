@@ -13,6 +13,7 @@ import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Before;
 import org.aspectj.lang.annotation.Pointcut;
 import org.springframework.stereotype.Component;
+import org.springframework.validation.BindingResult;
 
 import com.springboot.todo.exception.FutureCreationDateException;
 import com.springboot.todo.payload.TodoDto;
@@ -30,16 +31,16 @@ public class TodoAspect {
 		}
 	};
 	
-	@Pointcut("execution(* com.springboot.todo.service.Todo*.create*(..)) && args(dto)")
-	public void todoCreationMethods(TodoDto dto) { }
+	@Pointcut("execution(* com.springboot.todo.service.Todo*.create*(..)) && args(.., dto)")
+	public void todoServiceCreationMethods(TodoDto dto) { }
 	
-	@Before("todoCreationMethods(dto)")
-	public void logMethod(JoinPoint jp, TodoDto dto) {
+	@Before("todoServiceCreationMethods(dto)")
+	public void logTodoServiceCreationMethods(JoinPoint jp, TodoDto dto) {
 		String methodName = jp.getSignature().getName();
 		logger.info("+++++++++++++++++++++++++++++++++++Method name: " + methodName);
 	}
 	
-	@Around("todoCreationMethods(dto)")
+	@Around("todoServiceCreationMethods(dto)")
 	public Object resTrictTodoCreationForFutureDates(ProceedingJoinPoint jp, TodoDto dto) throws Throwable {
 		String methodName = jp.getSignature().getName();
 		logger.info("++++++++++ Method Name: " + methodName );
