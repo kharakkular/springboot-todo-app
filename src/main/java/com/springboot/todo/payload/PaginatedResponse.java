@@ -9,11 +9,12 @@ public class PaginatedResponse<T> {
 	private boolean isLast;
 	private long totalElements;
 	private int totalPages;
+	private int noOfCurrentPageItems;
 	
 	public PaginatedResponse() {}
 	
 	public PaginatedResponse(List<T> content, int pageNo, int pageSize, boolean isLast, int totalElements,
-			int totalPages) {
+			int totalPages, int currentPageItems) {
 		super();
 		this.content = content;
 		this.pageNo = pageNo;
@@ -21,6 +22,7 @@ public class PaginatedResponse<T> {
 		this.isLast = isLast;
 		this.totalElements = totalElements;
 		this.totalPages = totalPages;
+		noOfCurrentPageItems = currentPageItems;
 	}
 	public List<T> getContent() {
 		return content;
@@ -58,6 +60,10 @@ public class PaginatedResponse<T> {
 	public void setTotalPages(int totalPages) {
 		this.totalPages = totalPages;
 	}
-	
-	
+	public void setNumberOfCurrentPageItems(int number) {
+		this.noOfCurrentPageItems = number;
+	}
+	public int getNumberOfCurrentPageItems() {
+		return noOfCurrentPageItems;
+	}
 }

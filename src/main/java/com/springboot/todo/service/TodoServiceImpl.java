@@ -119,7 +119,7 @@ public class TodoServiceImpl implements TodoService{
 		paginatedResponse.setTotalElements(totalElements);
 		paginatedResponse.setTotalPages(totalPages);
 		paginatedResponse.setLast(pageSize >= totalPages);
-		
+		paginatedResponse.setNumberOfCurrentPageItems(listOfTodoDto.size());
 		return paginatedResponse;
 	}
 	
