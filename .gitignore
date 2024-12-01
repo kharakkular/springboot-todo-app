@@ -199,3 +199,7 @@ README.html
 *.iml
 .idea
 .exercism
+
+### Ignore script file
+*.sh
+/.apt_generated_tests/
