@@ -1,7 +1,9 @@
 package com.springboot.todo.exception;
 
 import java.util.Date;
+import java.util.Locale;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
@@ -12,10 +14,14 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
+import com.springboot.todo.i18n.I18nUtil;
 import com.springboot.todo.payload.ErrorDetails;
 
 @ControllerAdvice
 public class GlobalExceptionHandler extends ResponseEntityExceptionHandler{
+	
+	@Autowired
+	private I18nUtil i18nUtil;
 	
 	@ExceptionHandler(ResourceNotFoundException.class)
 	public ResponseEntity<ErrorDetails> handleResourceNotFoundException(ResourceNotFoundException exception, WebRequest request) {
@@ -43,7 +49,10 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler{
 	@ExceptionHandler(FutureCreationDateException.class)
 	public ResponseEntity<ErrorDetails> handleFutureCreationDateException(FutureCreationDateException ex, WebRequest request){
 		
-		ErrorDetails errorDetails = new ErrorDetails(new Date(), "Creation Date: " + ex.getField() + ", reflects a future date!", request.getDescription(false));
+		Locale locale = Locale.getDefault();
+		String[] params = { ex.getField().toString() };
+		String localizedMessage =  i18nUtil.getMessage("future.exception", params);
+		ErrorDetails errorDetails = new ErrorDetails(new Date(), localizedMessage, request.getDescription(false));
 		
 		return new ResponseEntity<ErrorDetails>(errorDetails, HttpStatus.BAD_REQUEST);
 	}
