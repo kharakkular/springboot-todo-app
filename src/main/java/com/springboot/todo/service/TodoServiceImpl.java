@@ -110,7 +110,7 @@ public class TodoServiceImpl implements TodoService{
 		List listOfTodoDto = query.getResultStream().map(todo -> mapToDto((Todo) todo)).toList();
 					
 		long totalElements = (long) entityManager.createQuery("select count(id) from Todo").getSingleResult();
-		int totalPages = (int) Math.ceil(totalElements / pageSize);
+		int totalPages = (int) Math.ceil((double) totalElements / pageSize);
 		
 		PaginatedResponse<TodoDto> paginatedResponse = new PaginatedResponse();
 		paginatedResponse.setContent(listOfTodoDto);
@@ -118,7 +118,7 @@ public class TodoServiceImpl implements TodoService{
 		paginatedResponse.setPageSize(pageSize);
 		paginatedResponse.setTotalElements(totalElements);
 		paginatedResponse.setTotalPages(totalPages);
-		paginatedResponse.setLast(pageSize >= totalPages);
+		paginatedResponse.setLast(pageNo >= totalPages);
 		paginatedResponse.setNumberOfCurrentPageItems(listOfTodoDto.size());
 		return paginatedResponse;
 	}
