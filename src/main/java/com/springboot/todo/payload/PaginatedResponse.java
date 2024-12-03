@@ -13,7 +13,7 @@ public class PaginatedResponse<T> {
 	
 	public PaginatedResponse() {}
 	
-	public PaginatedResponse(List<T> content, int pageNo, int pageSize, boolean isLast, int totalElements,
+	public PaginatedResponse(List<T> content, int pageNo, int pageSize, boolean isLast, long totalElements,
 			int totalPages, int currentPageItems) {
 		super();
 		this.content = content;

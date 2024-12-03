@@ -31,7 +31,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler{
 		return new ResponseEntity<ErrorDetails>(errorDetails, HttpStatus.NOT_FOUND);
 	}
 	
-	@ExceptionHandler(Exception.class)
+	@ExceptionHandler({ CustomGlobalException.class, Exception.class })
 	public ResponseEntity<ErrorDetails> handleGlobalException(Exception exception, WebRequest request) {
 		
 		ErrorDetails errorDetails = new ErrorDetails(new Date(), exception.getMessage(), request.getDescription(false));

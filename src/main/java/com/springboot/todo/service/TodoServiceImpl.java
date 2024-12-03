@@ -1,14 +1,17 @@
 package com.springboot.todo.service;
 
+import java.util.Date;
 //import java.awt.print.Pageable;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 import java.util.stream.Stream;
 
 import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import com.springboot.todo.entity.Todo;
@@ -121,6 +124,23 @@ public class TodoServiceImpl implements TodoService{
 		paginatedResponse.setLast(pageNo >= totalPages);
 		paginatedResponse.setNumberOfCurrentPageItems(listOfTodoDto.size());
 		return paginatedResponse;
+	}
+	
+	@Override
+	@Async
+	public CompletableFuture<PaginatedResponse<TodoDto>> getTodosByCreationDateAsync(Date creationDate, int pageNo, int pageSize) throws InterruptedException {
+		
+		Pageable pageRequest = PageRequest.of(pageNo, pageSize);
+		
+		Page<Todo> todosByCreationDate = todoRepository.findByCreationDate(creationDate, pageRequest);
+		
+		List<TodoDto> content = todosByCreationDate.getContent().stream().map(todo -> mapToDto(todo)).toList();
+		
+		PaginatedResponse<TodoDto> paginatedResponse = new PaginatedResponse<TodoDto>(content, todosByCreationDate.getNumber(), todosByCreationDate.getSize(), !todosByCreationDate.isLast(), 
+				todosByCreationDate.getTotalElements(), todosByCreationDate.getTotalPages(), todosByCreationDate.getNumberOfElements());
+		Thread.sleep(2000L);
+		return CompletableFuture.completedFuture(paginatedResponse);
+		
 	}
 	
 	private Todo mapToEntity(TodoDto dto) {

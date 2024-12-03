@@ -23,7 +23,9 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.context.request.async.DeferredResult;
 
+import com.springboot.todo.exception.CustomGlobalException;
 import com.springboot.todo.exception.ValidationException;
 import com.springboot.todo.payload.PaginatedResponse;
 import com.springboot.todo.payload.TodoDto;
@@ -67,8 +69,27 @@ public class TodoController {
 		return new ResponseEntity<String>("Todo entity deleted successfully", HttpStatus.OK);
 	}
 	
-	@GetMapping
+	@GetMapping(params = {"pageNo", "pageSize" })
 	public PaginatedResponse<TodoDto> getAllTodos(@RequestParam(defaultValue = "0") int pageNo, @RequestParam(defaultValue = "10") int pageSize) {
 		return todoService.getAllTodos(pageNo, pageSize);
 	}
+	
+	@GetMapping(params = { "creationDate", "pageNo", "pageSize" })
+	public DeferredResult<PaginatedResponse<TodoDto>> getAllTodosByCreationDate(@RequestParam(name = "creationDate") Date creationDate, @RequestParam(defaultValue = "0") int pageNo, @RequestParam(defaultValue = "10") int pageSize) {
+		DeferredResult<PaginatedResponse<TodoDto>> dfr = new DeferredResult<PaginatedResponse<TodoDto>>();
+		
+		try {
+			todoService.getTodosByCreationDateAsync(creationDate, pageNo, pageSize)
+						.thenAccept(res -> dfr.setResult(res))
+						.exceptionally(ex -> { 
+							dfr.setErrorResult(new CustomGlobalException(ex.getMessage()));
+							return null;
+						});
+		} catch (InterruptedException e) {
+			throw new CustomGlobalException(e.getMessage());
+		}
+		
+		return dfr;
+	}
 }
+
