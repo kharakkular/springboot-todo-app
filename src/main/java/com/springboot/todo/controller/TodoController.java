@@ -8,6 +8,7 @@ import java.util.stream.Collectors;
 
 import org.modelmapper.spi.ErrorMessage;
 import org.springframework.beans.propertyeditors.CustomDateEditor;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
@@ -75,7 +76,7 @@ public class TodoController {
 	}
 	
 	@GetMapping(params = { "creationDate", "pageNo", "pageSize" })
-	public DeferredResult<PaginatedResponse<TodoDto>> getAllTodosByCreationDate(@RequestParam(name = "creationDate") Date creationDate, @RequestParam(defaultValue = "0") int pageNo, @RequestParam(defaultValue = "10") int pageSize) {
+	public DeferredResult<PaginatedResponse<TodoDto>> getAllTodosByCreationDate(@RequestParam(name = "creationDate") @DateTimeFormat(pattern = "dd-MM-yyyy") Date creationDate, @RequestParam(defaultValue = "0") int pageNo, @RequestParam(defaultValue = "10") int pageSize) {
 		DeferredResult<PaginatedResponse<TodoDto>> dfr = new DeferredResult<PaginatedResponse<TodoDto>>();
 		
 		try {

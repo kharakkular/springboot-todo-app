@@ -132,7 +132,7 @@ public class TodoServiceImpl implements TodoService{
 		
 		Pageable pageRequest = PageRequest.of(pageNo, pageSize);
 		
-		Page<Todo> todosByCreationDate = todoRepository.findByCreationDate(creationDate, pageRequest);
+		Page<Todo> todosByCreationDate = todoRepository.findByCreationDateBefore(creationDate, pageRequest);
 		
 		List<TodoDto> content = todosByCreationDate.getContent().stream().map(todo -> mapToDto(todo)).toList();
 		
