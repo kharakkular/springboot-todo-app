@@ -71,7 +71,7 @@ public class TodoController {
 	}
 	
 	@GetMapping
-	public PaginatedResponse<TodoDto> getAllTodos(@RequestParam(defaultValue = "0") int pageNo, @RequestParam(defaultValue = "10") int pageSize) {
+	public PaginatedResponse<TodoDto> getAllTodos(@RequestParam(defaultValue = "1") int pageNo, @RequestParam(defaultValue = "10") int pageSize) {
 		return todoService.getAllTodos(pageNo, pageSize);
 	}
 	
