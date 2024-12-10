@@ -70,12 +70,12 @@ public class TodoController {
 		return new ResponseEntity<String>("Todo entity deleted successfully", HttpStatus.OK);
 	}
 	
-	@GetMapping(params = {"pageNo", "pageSize" })
+	@GetMapping
 	public PaginatedResponse<TodoDto> getAllTodos(@RequestParam(defaultValue = "0") int pageNo, @RequestParam(defaultValue = "10") int pageSize) {
 		return todoService.getAllTodos(pageNo, pageSize);
 	}
 	
-	@GetMapping(params = { "creationDate", "pageNo", "pageSize" })
+	@GetMapping(params = { "creationDate"})
 	public DeferredResult<PaginatedResponse<TodoDto>> getAllTodosByCreationDate(@RequestParam(name = "creationDate") @DateTimeFormat(pattern = "dd-MM-yyyy") Date creationDate, @RequestParam(defaultValue = "0") int pageNo, @RequestParam(defaultValue = "10") int pageSize) {
 		DeferredResult<PaginatedResponse<TodoDto>> dfr = new DeferredResult<PaginatedResponse<TodoDto>>();
 		
