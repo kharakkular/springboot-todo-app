@@ -6,7 +6,11 @@ pipeline {
 	stages {
 		stage('Checkout Code') {
 			steps {
-				git 'https://github.com/kharakkular/springboot-todo-app'
+				script {
+					git branch: 'main',
+						credentialsId: 'kharak-git-credential',
+						url: 'https://github.com/kharakkular/springboot-todo-app'
+				}
 			}
 		}
 		stage('Build') {
