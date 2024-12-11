@@ -9,8 +9,8 @@ pipeline {
 				script {
 					git branch: 'main',
 						credentialsId: 'kharak-git-credential',
-						url: 'https://github.com/kharakkular/springboot-todo-app'
-				}
+						url: 'https://github.com/kharakkular/springboot-todo-app.git'
+				} 
 			}
 		}
 		stage('Build') {
