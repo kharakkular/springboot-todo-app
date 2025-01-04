@@ -4,6 +4,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.concurrent.Callable;
 import java.util.stream.Collectors;
 
 import org.modelmapper.spi.ErrorMessage;
@@ -76,7 +77,8 @@ public class TodoController {
 	}
 	
 	@GetMapping(params = { "creationDate"})
-	public DeferredResult<PaginatedResponse<TodoDto>> getAllTodosByCreationDate(@RequestParam(name = "creationDate") @DateTimeFormat(pattern = "dd-MM-yyyy") Date creationDate, @RequestParam(defaultValue = "0") int pageNo, @RequestParam(defaultValue = "10") int pageSize) {
+	public DeferredResult<PaginatedResponse<TodoDto>> getAllTodosByCreationDate(@RequestParam(name = "creationDate") @DateTimeFormat(pattern = "dd-MM-yyyy") Date creationDate, 
+									@RequestParam(defaultValue = "0") int pageNo, @RequestParam(defaultValue = "10") int pageSize) {
 		DeferredResult<PaginatedResponse<TodoDto>> dfr = new DeferredResult<PaginatedResponse<TodoDto>>();
 		
 		try {
@@ -91,6 +93,22 @@ public class TodoController {
 		}
 		
 		return dfr;
+	}
+	
+	@GetMapping(params = { "completion" })
+	public Callable<PaginatedResponse<TodoDto>> getAllTodosByCompletion(@RequestParam(name = "completion") boolean completion, 
+			@RequestParam(defaultValue = "0") int pageNo, @RequestParam(defaultValue = "0") int pageSize){
+		
+		Callable<PaginatedResponse<TodoDto>> callable = todoService.getAllTodosbyCompletion(completion, pageNo, pageSize);
+		
+		try {
+			callable.call();
+			
+		} catch (Exception e) {
+			throw new CustomGlobalException(e.getMessage());
+		}
+		
+		return callable;
 	}
 }
 

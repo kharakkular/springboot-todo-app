@@ -13,4 +13,5 @@ import com.springboot.todo.payload.TodoDto;
 
 public interface TodoRepository extends JpaRepository<Todo, Long>{
 	Page<Todo> findByCreationDateBefore(Date creationDate, Pageable pageable);
+	Page<Todo> findByCompleted(boolean completion, Pageable pageable);
 }

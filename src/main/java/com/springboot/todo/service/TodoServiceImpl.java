@@ -4,6 +4,7 @@ import java.util.Date;
 //import java.awt.print.Pageable;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Stream;
 
@@ -143,6 +144,29 @@ public class TodoServiceImpl implements TodoService{
 		
 	}
 	
+	@Override
+	@Async
+	public Callable<PaginatedResponse<TodoDto>> getAllTodosbyCompletion(boolean completion, int pageNo, int pageSize) {
+		
+		
+		return () -> {
+			PageRequest pageRequest = PageRequest.of(pageNo, pageSize);
+			Page<Todo> completionRecords = todoRepository.findByCompleted(completion, pageRequest);
+			
+			List<TodoDto> content = completionRecords.map(todo -> mapToDto(todo)).getContent();
+			
+			PaginatedResponse<TodoDto> paginatedResponse = new PaginatedResponse<TodoDto>();
+			paginatedResponse.setContent(content);
+			paginatedResponse.setLast(completionRecords.isLast());
+			paginatedResponse.setNumberOfCurrentPageItems(content.size());
+			paginatedResponse.setPageNo(completionRecords.getNumber());
+			paginatedResponse.setPageSize(pageSize);
+			paginatedResponse.setTotalElements(completionRecords.getTotalElements());
+			paginatedResponse.setTotalPages(completionRecords.getTotalPages());
+			return paginatedResponse;
+		};
+	}
+		
 	private Todo mapToEntity(TodoDto dto) {
 		Todo todo = mapper.map(dto, Todo.class);
 		return todo;
@@ -152,5 +176,6 @@ public class TodoServiceImpl implements TodoService{
 		TodoDto todoDto = mapper.map(todo, TodoDto.class);
 		return todoDto;
 	}
+
 	
 }
