@@ -203,3 +203,6 @@ README.html
 ### Ignore script file
 *.sh
 /.apt_generated_tests/
+
+### Ignore logs file
+logs/
