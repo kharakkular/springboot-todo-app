@@ -20,7 +20,7 @@ import jakarta.annotation.PostConstruct;
 import jakarta.validation.Valid;
 
 @RestController
-@RequestMapping("/api/register")
+@RequestMapping("/register")
 public class RegistrationController {
 
 	@Autowired
