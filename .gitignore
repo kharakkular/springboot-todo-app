@@ -203,6 +203,9 @@ README.html
 ### Ignore script file
 *.sh
 /.apt_generated_tests/
+<<<<<<< Updated upstream
 
 ### Ignore logs file
 logs/
+=======
+>>>>>>> Stashed changes
