@@ -15,6 +15,8 @@ import com.springboot.todo.repository.RoleRepository;
 import com.springboot.todo.repository.UserRepository;
 import com.springboot.todo.security.enums.Roles;
 
+import jakarta.transaction.Transactional;
+
 @Service
 public class RegistrationServiceImpl implements RegistrationService{
 
@@ -27,6 +29,7 @@ public class RegistrationServiceImpl implements RegistrationService{
 	@Autowired
 	private PasswordEncoder passwordEncoder;
 	
+	@Transactional
 	@Override
 	public String register(RegistrationRequest registrationRequest, Set<Roles> roles) {
 		
@@ -37,6 +40,7 @@ public class RegistrationServiceImpl implements RegistrationService{
 		User newUser = new User();
 		newUser.setUsername(registrationRequest.getUsername());
 		newUser.setPassword(passwordEncoder.encode(registrationRequest.getPassword()));
+		newUser.setEnabled(true);
 		
 		Set<Role> usersRoles = new HashSet<Role>();
 		
