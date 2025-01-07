@@ -6,7 +6,7 @@ import com.springboot.todo.payload.RegistrationRequest;
 import com.springboot.todo.security.enums.Roles;
 
 public interface RegistrationService {
-	String register(RegistrationRequest registrationRequest, Set<String> roles);
+	String register(RegistrationRequest registrationRequest, Set<Roles> roles);
 	boolean isRolePresent(Roles role);
 	void addRole(Roles role);
 }
