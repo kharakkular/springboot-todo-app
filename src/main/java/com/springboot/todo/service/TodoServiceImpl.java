@@ -1,5 +1,6 @@
 package com.springboot.todo.service;
 
+import java.security.Permission;
 import java.util.Date;
 //import java.awt.print.Pageable;
 import java.util.List;
@@ -8,11 +9,19 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Stream;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.modelmapper.ModelMapper;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.scheduling.annotation.Async;
+import org.springframework.security.acls.domain.BasePermission;
+import org.springframework.security.acls.domain.PrincipalSid;
+import org.springframework.security.acls.model.Sid;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import com.springboot.todo.entity.Todo;
@@ -28,6 +37,11 @@ import jakarta.transaction.Transactional;
 @Service
 public class TodoServiceImpl implements TodoService{
 	
+	Logger logger = LogManager.getLogger(TodoServiceImpl.class);
+	
+	@Autowired
+	private TodoAclService aclService;
+	
 	private EntityManager entityManager;
 	
 	private TodoRepository todoRepository;
@@ -41,13 +55,21 @@ public class TodoServiceImpl implements TodoService{
 	}
 
 	@Override
+	@Transactional
 	public TodoDto createTodo(TodoDto todoDto) {
-		
-		Todo todo = mapToEntity(todoDto);
-		Todo postTodo = todoRepository.save(todo);
-		
-		TodoDto postResponse = mapToDto(postTodo);
-		return postResponse;
+		TodoDto postResponseTodoDto = null;
+		try {
+			Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+			Todo todo = mapToEntity(todoDto);
+			Todo postTodo = todoRepository.save(todo);
+			logger.info("Created Todo temporarily");
+			postResponseTodoDto= mapToDto(postTodo);
+			logger.info("Assigning permission for created todo");
+			assignUserPermission(postTodo, authentication.getName());
+		} catch (Exception e) {
+			logger.error("________--------------+++++++++++++================Error message from create todo: " + e.getStackTrace());
+		}
+		return postResponseTodoDto;	
 	}
 
 	@Override
@@ -80,52 +102,52 @@ public class TodoServiceImpl implements TodoService{
 		todoRepository.delete(fetchedTodo);
 	}
 
-//	@Override
-//	public PaginatedResponse<TodoDto> getAllTodos(int pageNo, int pageSize) {
-//		
-//		Pageable pageable = PageRequest.of(pageNo, pageSize);
-//		
-//		Page<Todo> pagedTodos = todoRepository.findAll(pageable);
-//		
-//		List<Todo> listOfTodos = pagedTodos.getContent();
-//		
-//		List<TodoDto> content = listOfTodos.stream().map(todo -> mapToDto(todo)).toList();
-//		
-//		PaginatedResponse<TodoDto> paginatedResponse = new PaginatedResponse();
-//		paginatedResponse.setContent(content);
-//		paginatedResponse.setPageNo(pagedTodos.getNumber());
-//		paginatedResponse.setPageSize(pagedTodos.getSize());
-//		paginatedResponse.setTotalElements(pagedTodos.getTotalElements());
-//		paginatedResponse.setTotalPages(pagedTodos.getTotalPages());
-//		paginatedResponse.setLast(pagedTodos.isLast());
-//		
-//		return paginatedResponse;
-//	}
-	@Transactional
 	@Override
 	public PaginatedResponse<TodoDto> getAllTodos(int pageNo, int pageSize) {
 		
-		int limit = (pageNo -1) * pageSize;
-		String sql = "select * from todos order by id LIMIT ?1 OFFSET ?2";
-		Query query = entityManager.createNativeQuery(sql, Todo.class);
-		query.setParameter(1, pageSize);
-		query.setParameter(2, limit);
+		Pageable pageable = PageRequest.of(pageNo, pageSize);
 		
-		List listOfTodoDto = query.getResultStream().map(todo -> mapToDto((Todo) todo)).toList();
-					
-		long totalElements = (long) entityManager.createQuery("select count(id) from Todo").getSingleResult();
-		int totalPages = (int) Math.ceil((double) totalElements / pageSize);
+		Page<Todo> pagedTodos = todoRepository.findAll(pageable);
+		
+		List<Todo> listOfTodos = pagedTodos.getContent();
+		
+		List<TodoDto> content = listOfTodos.stream().map(todo -> mapToDto(todo)).toList();
 		
 		PaginatedResponse<TodoDto> paginatedResponse = new PaginatedResponse();
-		paginatedResponse.setContent(listOfTodoDto);
-		paginatedResponse.setPageNo(pageNo);
-		paginatedResponse.setPageSize(pageSize);
-		paginatedResponse.setTotalElements(totalElements);
-		paginatedResponse.setTotalPages(totalPages);
-		paginatedResponse.setLast(pageNo >= totalPages);
-		paginatedResponse.setNumberOfCurrentPageItems(listOfTodoDto.size());
+		paginatedResponse.setContent(content);
+		paginatedResponse.setPageNo(pagedTodos.getNumber());
+		paginatedResponse.setPageSize(pagedTodos.getSize());
+		paginatedResponse.setTotalElements(pagedTodos.getTotalElements());
+		paginatedResponse.setTotalPages(pagedTodos.getTotalPages());
+		paginatedResponse.setLast(pagedTodos.isLast());
+		
 		return paginatedResponse;
 	}
+//	@Transactional
+//	@Override
+//	public PaginatedResponse<TodoDto> getAllTodos(int pageNo, int pageSize) {
+//		
+//		int limit = (pageNo -1) * pageSize;
+//		String sql = "select * from todos order by id LIMIT ?1 OFFSET ?2";
+//		Query query = entityManager.createNativeQuery(sql, Todo.class);
+//		query.setParameter(1, pageSize);
+//		query.setParameter(2, limit);
+//		
+//		List listOfTodoDto = query.getResultStream().map(todo -> mapToDto((Todo) todo)).toList();
+//					
+//		long totalElements = (long) entityManager.createQuery("select count(id) from Todo").getSingleResult();
+//		int totalPages = (int) Math.ceil((double) totalElements / pageSize);
+//		
+//		PaginatedResponse<TodoDto> paginatedResponse = new PaginatedResponse();
+//		paginatedResponse.setContent(listOfTodoDto);
+//		paginatedResponse.setPageNo(pageNo);
+//		paginatedResponse.setPageSize(pageSize);
+//		paginatedResponse.setTotalElements(totalElements);
+//		paginatedResponse.setTotalPages(totalPages);
+//		paginatedResponse.setLast(pageNo >= totalPages);
+//		paginatedResponse.setNumberOfCurrentPageItems(listOfTodoDto.size());
+//		return paginatedResponse;
+//	}
 	
 	@Override
 	@Async
@@ -177,5 +199,7 @@ public class TodoServiceImpl implements TodoService{
 		return todoDto;
 	}
 
-	
+	private void assignUserPermission(Todo todo, String username) {
+		aclService.grantReadPermission(todo, username);
+	}
 }
