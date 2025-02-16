@@ -7,6 +7,8 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
 
@@ -26,16 +28,28 @@ public class Todo {
 	
 	@Column(name = "createdOn", nullable = false)
 	private Date creationDate;
+	
+	@Column(name = "createdBy", nullable = false)
+	private String createdBy;
 
-	public Todo(Long id, boolean completed, String task, Date creationDate) {
+	public Todo(Long id, boolean completed, String task, Date creationDate, String createdBy) {
 		super();
 		this.id = id;
 		this.completed = completed;
 		this.task = task;
 		this.creationDate = creationDate;
+		this.createdBy = createdBy;
 	}
 	
 	public Todo() { }
+	
+	public String getCreatedBy() {
+		return this.createdBy;
+	}
+	
+	public void setCreatedBy(String createdBy) {
+		this.createdBy = createdBy;
+	}
 
 	public Long getId() {
 		return id;
