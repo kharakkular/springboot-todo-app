@@ -17,6 +17,9 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.scheduling.annotation.Async;
+import org.springframework.security.access.prepost.PostFilter;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.access.prepost.PreFilter;
 import org.springframework.security.acls.domain.BasePermission;
 import org.springframework.security.acls.domain.PrincipalSid;
 import org.springframework.security.acls.model.Sid;
@@ -24,11 +27,14 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
+import com.springboot.todo.entity.Role;
 import com.springboot.todo.entity.Todo;
+import com.springboot.todo.entity.User;
 import com.springboot.todo.exception.ResourceNotFoundException;
 import com.springboot.todo.payload.PaginatedResponse;
 import com.springboot.todo.payload.TodoDto;
 import com.springboot.todo.repository.TodoRepository;
+import com.springboot.todo.repository.UserRepository;
 
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.Query;
@@ -46,30 +52,36 @@ public class TodoServiceImpl implements TodoService{
 	
 	private TodoRepository todoRepository;
 	
+	private UserRepository userRepository;
+	
 	private ModelMapper mapper;
 	
-	public TodoServiceImpl(TodoRepository _todoRepository, ModelMapper _mapper, EntityManager _manager) {
+	public TodoServiceImpl(TodoRepository _todoRepository, ModelMapper _mapper, EntityManager _manager, UserRepository userRepository) {
 		todoRepository = _todoRepository;
 		mapper = _mapper;
 		entityManager = _manager;
+		this.userRepository = userRepository;
 	}
 
 	@Override
 	@Transactional
-	public TodoDto createTodo(TodoDto todoDto) {
+	@PreAuthorize("hasRole('ROLE_ADMIN') || hasRole('ROLE_USER')")
+	public TodoDto createTodo(TodoDto todoDto,String user) {
 		TodoDto postResponseTodoDto = null;
-		try {
-			Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+//		try {
+//			Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 			Todo todo = mapToEntity(todoDto);
+			todo.setCreatedBy(user);
 			Todo postTodo = todoRepository.save(todo);
 			logger.info("Created Todo temporarily");
 			postResponseTodoDto= mapToDto(postTodo);
 			logger.info("Assigning permission for created todo");
-			assignUserPermission(postTodo, authentication.getName());
-		} catch (Exception e) {
-			logger.error("________--------------+++++++++++++================Error message from create todo: " + e.getStackTrace());
-		}
-		return postResponseTodoDto;	
+			assignUserPermission(postTodo, user);
+//		} catch (Exception e) {
+//			e.getStackTrace();
+//			logger.error("________--------------+++++++++++++================Error message from create todo: " + e.getMessage());
+//		}
+		return postResponseTodoDto;
 	}
 
 	@Override
@@ -103,11 +115,24 @@ public class TodoServiceImpl implements TodoService{
 	}
 
 	@Override
-	public PaginatedResponse<TodoDto> getAllTodos(int pageNo, int pageSize) {
+	@PreAuthorize("hasRole('ROLE_ADMIN') or hasRole('ROLE_USER')")
+	public PaginatedResponse<TodoDto> getAllTodos(String user, int pageNo, int pageSize) {
 		
 		Pageable pageable = PageRequest.of(pageNo, pageSize);
 		
-		Page<Todo> pagedTodos = todoRepository.findAll(pageable);
+		Page<Todo> pagedTodos = null;
+		
+		Optional<User> fetchedUser = userRepository.findByUsername(user);
+		List<String> userRoles = fetchedUser.get().getRoles().stream().map(role -> role.getRole()).toList();
+		
+		logger.info("1-1-1-1-1-1-1-1 Roles of the user from getAllTodos: " + userRoles.toString());
+		
+		if(userRoles.contains("ROLE_ADMIN")) {
+			pagedTodos = todoRepository.findAll(pageable);
+		} else {
+			pagedTodos = todoRepository.findByCreatedBy(user, pageable);
+			logger.info("000000000000000 ----------- Total todos fetched: " + pagedTodos.getNumberOfElements());
+		}
 		
 		List<Todo> listOfTodos = pagedTodos.getContent();
 		
@@ -120,7 +145,7 @@ public class TodoServiceImpl implements TodoService{
 		paginatedResponse.setTotalElements(pagedTodos.getTotalElements());
 		paginatedResponse.setTotalPages(pagedTodos.getTotalPages());
 		paginatedResponse.setLast(pagedTodos.isLast());
-		
+		paginatedResponse.setNumberOfCurrentPageItems(pagedTodos.getNumberOfElements());
 		return paginatedResponse;
 	}
 //	@Transactional
@@ -151,11 +176,20 @@ public class TodoServiceImpl implements TodoService{
 	
 	@Override
 	@Async
-	public CompletableFuture<PaginatedResponse<TodoDto>> getTodosByCreationDateAsync(Date creationDate, int pageNo, int pageSize) throws InterruptedException {
+	@PreAuthorize("hasRole('ROLE_ADMIN') or hasRole('ROLE_USER')")
+	public CompletableFuture<PaginatedResponse<TodoDto>> getTodosByCreationDateAsync(String user, Date creationDate, int pageNo, int pageSize) throws InterruptedException {
 		
 		Pageable pageRequest = PageRequest.of(pageNo, pageSize);
 		
-		Page<Todo> todosByCreationDate = todoRepository.findByCreationDateBefore(creationDate, pageRequest);
+		Optional<User> username = userRepository.findByUsername(user);
+		List<Role> userRoles = username.get().getRoles();
+		
+		Page<Todo> todosByCreationDate;
+		if(userRoles.contains("ROLES_ADMIN")) {
+			todosByCreationDate = todoRepository.findByCreationDateBeforeAndCreatedBy(creationDate, user, pageRequest);
+		} else {
+			todosByCreationDate = todoRepository.findByCreationDateBefore(creationDate, pageRequest);
+		}
 		
 		List<TodoDto> content = todosByCreationDate.getContent().stream().map(todo -> mapToDto(todo)).toList();
 		
@@ -163,12 +197,11 @@ public class TodoServiceImpl implements TodoService{
 				todosByCreationDate.getTotalElements(), todosByCreationDate.getTotalPages(), todosByCreationDate.getNumberOfElements());
 		Thread.sleep(2000L);
 		return CompletableFuture.completedFuture(paginatedResponse);
-		
 	}
 	
 	@Override
 	@Async
-	public Callable<PaginatedResponse<TodoDto>> getAllTodosbyCompletion(boolean completion, int pageNo, int pageSize) {
+	public Callable<PaginatedResponse<TodoDto>> getAllTodosbyCompletion(String user, boolean completion, int pageNo, int pageSize) {
 		
 		
 		return () -> {

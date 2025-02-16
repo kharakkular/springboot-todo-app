@@ -1,6 +1,8 @@
 package com.springboot.todo.service;
 
 import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
@@ -42,7 +44,7 @@ public class RegistrationServiceImpl implements RegistrationService{
 		newUser.setPassword(passwordEncoder.encode(registrationRequest.getPassword()));
 		newUser.setEnabled(true);
 		
-		Set<Role> usersRoles = new HashSet<Role>();
+		List<Role> usersRoles = new LinkedList<Role>();
 		
 		for(Roles role: roles) {
 			Optional<Role> retrievedRole = roleRepository.findByRole(role.toString());
